@@ -270,5 +270,53 @@ describe("betterAction", () => {
 
       expect(onAutorun).toHaveBeenCalledTimes(5);
     });
+
+    it("should work with multiple async actions mutating same state", async () => {
+      // expect.assertions(9);
+
+      const onAutorun = jest.fn<void, [number]>();
+
+      class Store {
+        @observable
+        public count: number = 0;
+
+        @betterAction
+        public async batchIncrementTwice(by: number): Promise<void> {
+          for (let i = 0; i < by; i++) {
+            this.count++;
+          }
+
+          await sleep(1);
+
+          for (let i = 0; i < by; i++) {
+            this.count++;
+          }
+        }
+      }
+
+      const store = new Store();
+
+      autorun(() => {
+        onAutorun(store.count);
+      });
+
+      expect(onAutorun).toHaveBeenNthCalledWith(1, 0);
+      expect(store.count).toBe(0);
+
+      await Promise.all([
+        store.batchIncrementTwice(3),
+        store.batchIncrementTwice(6)
+      ]);
+
+      expect(store.count).toBe(18);
+
+      // expect(onAutorun).toHaveBeenNthCalledWith(2, 3);
+      // expect(onAutorun).toHaveBeenNthCalledWith(3, 6);
+
+      // expect(onAutorun).toHaveBeenNthCalledWith(4, 12);
+      // expect(onAutorun).toHaveBeenNthCalledWith(5, 18);
+
+      expect(onAutorun).toHaveBeenCalledTimes(5);
+    });
   });
 });
