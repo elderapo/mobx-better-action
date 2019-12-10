@@ -281,12 +281,15 @@ describe("betterAction", () => {
         public count: number = 0;
 
         @betterAction
-        public async batchIncrementTwice(by: number): Promise<void> {
+        public async batchIncrementTwice(
+          by: number,
+          waitMS: number
+        ): Promise<void> {
           for (let i = 0; i < by; i++) {
             this.count++;
           }
 
-          await sleep(1);
+          await sleep(waitMS);
 
           for (let i = 0; i < by; i++) {
             this.count++;
@@ -304,17 +307,11 @@ describe("betterAction", () => {
       expect(store.count).toBe(0);
 
       await Promise.all([
-        store.batchIncrementTwice(3),
-        store.batchIncrementTwice(6)
+        store.batchIncrementTwice(3, 10),
+        store.batchIncrementTwice(6, 50)
       ]);
 
       expect(store.count).toBe(18);
-
-      // expect(onAutorun).toHaveBeenNthCalledWith(2, 3);
-      // expect(onAutorun).toHaveBeenNthCalledWith(3, 6);
-
-      // expect(onAutorun).toHaveBeenNthCalledWith(4, 12);
-      // expect(onAutorun).toHaveBeenNthCalledWith(5, 18);
 
       expect(onAutorun).toHaveBeenCalledTimes(5);
     });

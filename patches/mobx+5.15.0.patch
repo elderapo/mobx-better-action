@@ -1,0 +1,12 @@
+diff --git a/node_modules/mobx/lib/mobx.js b/node_modules/mobx/lib/mobx.js
+index 9709e1f..d789189 100644
+--- a/node_modules/mobx/lib/mobx.js
++++ b/node_modules/mobx/lib/mobx.js
+@@ -4607,3 +4607,6 @@ exports.transaction = transaction;
+ exports.untracked = untracked;
+ exports.values = values;
+ exports.when = when;
++
++exports.startBatch = startBatch;
++exports.endBatch = endBatch;
+\ No newline at end of file

@@ -1,62 +1,44 @@
+import { waitImmediate } from "@elderapo/utils";
 import * as mobx from "mobx";
-import { produce } from "immer";
-import { waitImmediate, sleep } from "@elderapo/utils";
 
-enum ActionMode {
-  Unknown = "unknown",
-  Async = "async",
-  Sync = "sync"
-}
+const startBatch = (mobx as any).startBatch;
+const endBatch = (mobx as any).endBatch;
 
 export const betterAction = (target: any, key: any, descriptor: any) => {
   const originalMethod = descriptor.value;
 
   descriptor.value = function(...args: any[]) {
-    let mode = ActionMode.Unknown;
-
-    let scheduledUpdates = mobx.toJS(this);
-
-    const addScheduledUpdate = (key: any, value: any): void => {
-      scheduledUpdates = produce(scheduledUpdates, (draft: any) => {
-        draft[key] = value;
-      });
-    };
-
-    const flushUpdates = () => {
-      mobx.runInAction(() => {
-        Object.assign(this, scheduledUpdates);
-      });
-    };
+    let syncMode = true;
 
     const wrapped = new Proxy(this, {
-      get: (_, key) => scheduledUpdates[key],
       set: (target: any, key: any, value: any) => {
         // console.log(`Update from action(mode: ${mode})`);
 
-        if (mode === ActionMode.Sync || mode === ActionMode.Unknown) {
-          addScheduledUpdate(key, value);
+        if (syncMode) {
+          mobx.runInAction(() => {
+            target[key] = value;
+          });
 
           return true;
         }
 
-        if (mode === ActionMode.Async) {
-          addScheduledUpdate(key, value);
-          setImmediate(() => flushUpdates());
+        startBatch();
 
-          return true;
-        }
+        mobx.runInAction(() => {
+          target[key] = value;
+        });
 
-        throw new Error(`Unknown action mode(${mode})!`);
+        setImmediate(() => endBatch());
+
+        return true;
       }
     });
 
+    startBatch();
     const ret = originalMethod.apply(wrapped, args);
+    endBatch();
 
-    mode = ret instanceof Promise ? ActionMode.Async : ActionMode.Sync;
-
-    flushUpdates();
-
-    mode = ActionMode.Async;
+    syncMode = false;
 
     if (ret instanceof Promise) {
       return new Promise<any>(async (resolve, reject) => {
