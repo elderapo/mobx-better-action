@@ -1,0 +1,23 @@
+{
+  "name": "mobx-better-action",
+  "version": "1.0.0",
+  "license": "MIT",
+  "dependencies": {
+    "@elderapo/utils": "^2.0.0",
+    "@types/node": "^12.12.6",
+    "ts-node": "^8.4.1",
+    "typescript": "^3.7.2"
+  },
+  "scripts": {
+    "start": "yarn start:dev",
+    "start:dev": "ts-node-dev --no-notify --respawn ./src/main.ts",
+    "start:production": "ts-node --transpile-only ./src/main.ts",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@types/jest": "^24.0.22",
+    "jest": "^24.9.0",
+    "ts-jest": "^24.0.2",
+    "ts-node-dev": "^1.0.0-pre.44"
+  }
+}
