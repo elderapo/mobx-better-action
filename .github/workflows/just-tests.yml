@@ -1,0 +1,22 @@
+name: Just tests
+
+on: push
+
+jobs:
+  Tests:
+    name: Just tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setting up NodeJS
+        uses: actions/setup-node@v1
+        with:
+          node-version: "10.x"
+
+      - name: Checking out repo
+        uses: actions/checkout@v1
+
+      - name: Installing packages
+        run: yarn install --frozen-lockfile
+
+      - name: Running tests
+        run: yarn test
