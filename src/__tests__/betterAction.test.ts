@@ -308,7 +308,7 @@ describe("betterAction", () => {
 
       await Promise.all([
         store.batchIncrementTwice(3, 10),
-        store.batchIncrementTwice(6, 25), // change to 10 or 50 to observe "multiple batch batching" lol
+        store.batchIncrementTwice(6, 25),
         store.batchIncrementTwice(5, 50)
       ]);
 
@@ -323,6 +323,58 @@ describe("betterAction", () => {
       expect(store.count).toBe(28);
 
       expect(onAutorun).toHaveBeenCalledTimes(7);
+    });
+
+    it("should work with multiple async actions mutating same state (batched batches lol...)", async () => {
+      // expect.assertions(11);
+
+      const onAutorun = jest.fn<void, [number]>();
+
+      class Store {
+        @observable
+        public count: number = 0;
+
+        @betterAction
+        public async batchIncrementTwice(
+          by: number,
+          waitMS: number
+        ): Promise<void> {
+          for (let i = 0; i < by; i++) {
+            this.count++;
+          }
+
+          await sleep(waitMS);
+
+          for (let i = 0; i < by; i++) {
+            this.count++;
+          }
+        }
+      }
+
+      const store = new Store();
+
+      autorun(() => {
+        onAutorun(store.count);
+      });
+
+      expect(onAutorun).toHaveBeenNthCalledWith(1, 0);
+      expect(store.count).toBe(0);
+
+      await Promise.all([
+        store.batchIncrementTwice(3, 10),
+        store.batchIncrementTwice(6, 10),
+        store.batchIncrementTwice(5, 10)
+      ]);
+
+      expect(onAutorun).toHaveBeenNthCalledWith(1, 0);
+      expect(onAutorun).toHaveBeenNthCalledWith(2, 3); /// 3
+      expect(onAutorun).toHaveBeenNthCalledWith(3, 9); /// 3, 6
+      expect(onAutorun).toHaveBeenNthCalledWith(4, 14); // 3, 6, 5
+      expect(onAutorun).toHaveBeenNthCalledWith(5, 28); // 3, 6, 5, 3, 6, 5
+
+      expect(store.count).toBe(28);
+
+      expect(onAutorun).toHaveBeenCalledTimes(5);
     });
   });
 });
