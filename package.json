@@ -15,7 +15,7 @@
     "start:dev": "ts-node-dev --no-notify --respawn ./src/main.ts",
     "start:production": "ts-node --transpile-only ./src/main.ts",
     "test": "jest --runInBand",
-    "test:watch": "yarn test --watch",
+    "test:watch": "yarn test --watchAll",
     "postinstall": "patch-package"
   },
   "devDependencies": {
